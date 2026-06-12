@@ -2,8 +2,8 @@ name: GPU Price Tracker
 
 on:
   schedule:
-    - cron: '*/15 * * * *' # Har 15 minute me cloud par automatic chalega
-  workflow_dispatch: # Isse aap manually bhi jab chahein test kar sakte hain
+    - cron: '*/5 * * * *' # Ab yeh har 5 minute me chalne ke liye queue me lagega
+  workflow_dispatch: 
 
 jobs:
   track:
