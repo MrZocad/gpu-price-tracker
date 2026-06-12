@@ -2,17 +2,31 @@ import requests
 from bs4 import BeautifulSoup
 import os
 
-# Yahan dono cards ke links aur unka target price set hai
+# Isme Amazon aur Flipkart dono ke links aur unka target price set hai
 CARDS_TO_TRACK = [
     {
-        "name": "RX 6600 8GB",
+        "name": "RX 6600 8GB (Amazon)",
         "url": "https://www.amazon.in/dp/B09H3PY14M",
-        "target_price": 20000
+        "target_price": 20000,
+        "site": "amazon"
     },
     {
-        "name": "RTX 3050 8GB",
+        "name": "RX 6600 8GB (Flipkart)",
+        "url": "https://www.flipkart.com/sapphire-amd-radeon-rx-6600-8-gb-gddr6-graphics-card/p/itm6c9b3fc01ff7d",
+        "target_price": 20000,
+        "site": "flipkart"
+    },
+    {
+        "name": "RTX 3050 8GB (Amazon)",
         "url": "https://www.amazon.in/dp/B09Q919S35",
-        "target_price": 18000
+        "target_price": 18000,
+        "site": "amazon"
+    },
+    {
+        "name": "RTX 3050 8GB (Flipkart)",
+        "url": "https://www.flipkart.com/msi-nvidia-geforce-rtx-3050-ventus-2x-xs-8g-oc-8-gb-gddr6-graphics-card/p/itm5a1804b407bfa",
+        "target_price": 18000,
+        "site": "flipkart"
     }
 ]
 
@@ -29,12 +43,22 @@ def check_price():
         try:
             response = requests.get(card["url"], headers=headers)
             soup = BeautifulSoup(response.content, 'html.parser')
-            price_element = soup.find(class_="a-price-whole")
+            current_price = None
             
-            if price_element:
-                price_str = price_element.text.replace(',', '').replace('.', '').strip()
-                current_price = int(price_str)
-                
+            if card["site"] == "amazon":
+                price_element = soup.find(class_="a-price-whole")
+                if price_element:
+                    price_str = price_element.text.replace(',', '').replace('.', '').strip()
+                    current_price = int(price_str)
+                    
+            elif card["site"] == "flipkart":
+                # Flipkart ke price tag ko dhoondne ke liye class code
+                price_element = soup.find(class_="Nx9w9m") or soup.find(class_="_10EHIb")
+                if price_element:
+                    price_str = price_element.text.replace('₹', '').replace(',', '').strip()
+                    current_price = int(price_str)
+            
+            if current_price:
                 print(f"{card['name']} Current Price: ₹{current_price}")
                 
                 if current_price <= card["target_price"]:
@@ -44,9 +68,9 @@ def check_price():
                     print(f"Alert sent for {card['name']}!")
             else:
                 print(f"{card['name']} ka price tag nahi mila.")
+                
         except Exception as e:
             print(f"Error checking {card['name']}:", e)
 
 if __name__ == "__main__":
     check_price()
-
