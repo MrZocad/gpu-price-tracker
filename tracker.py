@@ -2,8 +2,9 @@ import requests
 from bs4 import BeautifulSoup
 import os
 
-# Isme Amazon aur Flipkart dono ke links aur unka target price set hai
-CARDS_TO_TRACK = [
+# Sabhi PC components ke links, target price aur website set hai
+ITEMS_TO_TRACK = [
+    # --- GRAPHICS CARDS ---
     {
         "name": "RX 6600 8GB (Amazon)",
         "url": "https://www.amazon.in/dp/B09H3PY14M",
@@ -27,6 +28,58 @@ CARDS_TO_TRACK = [
         "url": "https://www.flipkart.com/msi-nvidia-geforce-rtx-3050-ventus-2x-xs-8g-oc-8-gb-gddr6-graphics-card/p/itm5a1804b407bfa",
         "target_price": 18000,
         "site": "flipkart"
+    },
+    # --- CPU (RYZEN 5 5600) ---
+    {
+        "name": "Ryzen 5 5600 (Amazon)",
+        "url": "https://www.amazon.in/dp/B09VCHR1VH",
+        "target_price": 13000,
+        "site": "amazon"
+    },
+    {
+        "name": "Ryzen 5 5600 (Flipkart)",
+        "url": "https://www.flipkart.com/amd-ryzen-5-5600-3-5-ghz-uarto-core-processor/p/itm3d73507340b02",
+        "target_price": 13000,
+        "site": "flipkart"
+    },
+    # --- MOTHERBOARD (MSI B550M PRO-VDH WIFI) ---
+    {
+        "name": "MSI B550M Pro-VDH WiFi (Amazon)",
+        "url": "https://www.amazon.in/dp/B08965Y8R9",
+        "target_price": 9500,
+        "site": "amazon"
+    },
+    {
+        "name": "MSI B550M Pro-VDH WiFi (Flipkart)",
+        "url": "https://www.flipkart.com/msi-b550m-pro-vdh-wifi-motherboard/p/itm674eb884a6c8e",
+        "target_price": 9500,
+        "site": "flipkart"
+    },
+    # --- NVME GEN 4 SSD (500GB / 512GB) ---
+    {
+        "name": "Crucial Gen4 NVMe 500GB SSD (Amazon)",
+        "url": "https://www.amazon.in/dp/B0CKTQNX9G",
+        "target_price": 6000,
+        "site": "amazon"
+    },
+    {
+        "name": "WD Black Gen4 NVMe 500GB SSD (Flipkart)",
+        "url": "https://www.flipkart.com/wd-black-sn770-500-gb-desktop-laptop-internal-solid-state-drive-wds500g3x0e/p/itmd5f788b776263",
+        "target_price": 6000,
+        "site": "flipkart"
+    },
+    # --- DDR4 8GB 3200MHZ RAM ---
+    {
+        "name": "Corsair Vengeance 8GB 3200MHz RAM (Amazon)",
+        "url": "https://www.amazon.in/dp/B07Y4GG7N5",
+        "target_price": 3500,
+        "site": "amazon"
+    },
+    {
+        "name": "G.Skill Ripjaws 8GB 3200MHz RAM (Flipkart)",
+        "url": "https://www.flipkart.com/g-skill-ripjaws-v-ddr4-8-gb-desktop-dram-f4-3200c16s-8gvkb/p/itme9g8gy6gwhm7g",
+        "target_price": 3500,
+        "site": "flipkart"
     }
 ]
 
@@ -39,38 +92,37 @@ def check_price():
         "Accept-Language": "en-US,en;q=0.5"
     }
     
-    for card in CARDS_TO_TRACK:
+    for item in ITEMS_TO_TRACK:
         try:
-            response = requests.get(card["url"], headers=headers)
+            response = requests.get(item["url"], headers=headers)
             soup = BeautifulSoup(response.content, 'html.parser')
             current_price = None
             
-            if card["site"] == "amazon":
+            if item["site"] == "amazon":
                 price_element = soup.find(class_="a-price-whole")
                 if price_element:
                     price_str = price_element.text.replace(',', '').replace('.', '').strip()
                     current_price = int(price_str)
                     
-            elif card["site"] == "flipkart":
-                # Flipkart ke price tag ko dhoondne ke liye class code
+            elif item["site"] == "flipkart":
                 price_element = soup.find(class_="Nx9w9m") or soup.find(class_="_10EHIb")
                 if price_element:
                     price_str = price_element.text.replace('₹', '').replace(',', '').strip()
                     current_price = int(price_str)
             
             if current_price:
-                print(f"{card['name']} Current Price: ₹{current_price}")
+                print(f"{item['name']} Current Price: ₹{current_price}")
                 
-                if current_price <= card["target_price"]:
-                    msg = f"🚨 GPU LOOT ALERT! 🚨\n\n{card['name']} ka price drop ho gaya hai!\nCurrent Price: ₹{current_price}\nTarget Price: ₹{card['target_price']}\n\nLink: {card['url']}"
+                if current_price <= item["target_price"]:
+                    msg = f"🚨 PRICE DROP ALERT! 🚨\n\n{item['name']} ka price drop ho gaya hai!\nCurrent Price: ₹{current_price}\nTarget Price: ₹{item['target_price']}\n\nLink: {item['url']}"
                     requests.post(f"https://api.telegram.com/bot{TELEGRAM_TOKEN}/sendMessage", 
                                   data={"chat_id": TELEGRAM_CHAT_ID, "text": msg})
-                    print(f"Alert sent for {card['name']}!")
+                    print(f"Alert sent for {item['name']}!")
             else:
-                print(f"{card['name']} ka price tag nahi mila.")
+                print(f"{item['name']} ka price tag nahi mila.")
                 
         except Exception as e:
-            print(f"Error checking {card['name']}:", e)
+            print(f"Error checking {item['name']}:", e)
 
 if __name__ == "__main__":
     check_price()
